@@ -16,8 +16,7 @@ import (
 var data = map[string]map[string]map[string]string{}
 
 const maxUploadSize = 20 * 1024 * 1024 // 20 MB
-const path = "./shapes1.json"
-const path1 = "./shapes2.json"
+const path = "./shapes.json"
 const uploadPath = "./cache"
 
 // load json into data
