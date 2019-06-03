@@ -48,6 +48,7 @@ func all(w http.ResponseWriter, r *http.Request) {
 func fileServe(w http.ResponseWriter, r *http.Request) {
 	// params should be in the format /:region/:version/:shape
 	params := strings.Split(r.URL.Path, "/")
+	fmt.Println(params)
 	if len(params) != 4 {
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
@@ -65,6 +66,18 @@ func fileServe(w http.ResponseWriter, r *http.Request) {
 		return
 
 	case "POST":
+		newpath := filepath.Join(uploadPath, region, version)
+
+		if _, err := os.Stat(newpath); os.IsNotExist(err) {
+			os.MkdirAll(newpath, os.ModePerm)
+		}
+		if _, ok := data[region]; !ok {
+			data[region] = make(map[string]map[string]string)
+		}
+		if _, ok := data[region][version]; !ok {
+			data[region][version] = make(map[string]string)
+		}
+
 		// if the file already exists return 400
 		if path, ok := data[region][version][shape]; ok {
 			fmt.Println(path)
@@ -83,7 +96,6 @@ func fileServe(w http.ResponseWriter, r *http.Request) {
 
 		file, header, err := r.FormFile("uploadFile")
 		filename := header.Filename
-		fmt.Println(filename)
 		if err != nil {
 			http.Error(w, "INVALID_FILE", http.StatusBadRequest)
 			return
@@ -96,7 +108,7 @@ func fileServe(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// put file in cache
-		newPath := filepath.Join(uploadPath, filename)
+		newPath := filepath.Join(newpath, filename)
 		newFile, err := os.Create(newPath)
 		if err != nil {
 			fmt.Println(err)
@@ -138,7 +150,7 @@ func main() {
 	http.HandleFunc("/", fileServe)
 
 	fmt.Printf("Starting server for testing HTTP POST...\n")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":9004", nil); err != nil {
 		log.Fatal(err)
 	}
 }
